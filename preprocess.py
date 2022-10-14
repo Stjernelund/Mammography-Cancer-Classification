@@ -18,13 +18,16 @@ def resize_images(paths,dim):
 
 def cropBorders(img, l=0.01, r=0.01, u=0.04, d=0.04):
     #Crop borders of full size images
-    nrows, ncols, channels = img.shape
+    nrows, ncols = img.shape
     l_crop = int(ncols * l)
     r_crop = int(ncols * (1 - r))
     u_crop = int(nrows * u)
     d_crop = int(nrows * (1 - d))
     cropped_img = img[u_crop:d_crop, l_crop:r_crop]
     return cropped_img
+
+def add_channels(img):
+    return np.expand_dims(img, axis=-1)
 
 #remove small areas from image, keep only the largest connected component
 def remove_areas(img):
@@ -36,18 +39,19 @@ def remove_areas(img):
     new_slc = np.zeros_like(mask_labeled)
     i = idx[0]
     new_slc[tuple(rps[i].coords.T)] = i + 1
-    #img[new_slc == 0] = 0
+    img[new_slc == 0] = 0
     return img
 
 def resize_full_image(paths):
     for i in range(len(paths)):
-        img = cv.imread(paths.values[i])
+        img = cv.imread(paths.values[i], cv.IMREAD_GRAYSCALE)
         img = cropBorders(img)
         img = remove_areas(img)
         if (type(img) == type(None)):
             pass
         else:
-            img = cv.resize(img, (256, 256), interpolation=cv.INTER_AREA)
+            img = cv.resize(img, (256, 256), interpolation=cv.INTER_LINEAR_EXACT)
+            img = add_channels(img)
             cv.imwrite(paths.values[i], img)
 
 def show_grid_of_images(images,ncols,nrows):
