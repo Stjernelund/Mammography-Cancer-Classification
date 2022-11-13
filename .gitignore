@@ -1,1 +1,3 @@
-roi_data/
+data/
+__pycache__/
+roi/roi_images
